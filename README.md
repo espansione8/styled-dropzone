@@ -19,3 +19,26 @@ A React component built on top of https://react-dropzone.js.org with the followi
 | fileMaxSize | number | 10485760                   | No       | value in Bytes of file max size default is 10485760 Bytes (10MB)                                                                                       |
 | fileMinSize | number | 1                          | No       | value in Bytes of file min size default is 1 Byte                                                                                                      |
 | apiKey      | string | false                      | No       | if used it will add to your form data body the key 'apiKey' with your apiKey value. Code example: `if (apiKey) { formData.append('apiKey', apiKey); }` |
+
+Sample code:
+
+```JSX
+  import React from 'react';
+  import StyledDropzone from '../components/StyledDropzone';
+
+  export default class extends React.Component {
+    render() {
+      return (
+        <div>
+          <StyledDropzone
+            postUrl="https://httpbin.org/post"
+            inputName="uploadFile"    // OPTIONAL
+            fileMaxSize={10485760}    // OPTIONAL
+            fileMinSize={1}           // OPTIONAL
+            apiKey="superSecretKey123"// OPTIONAL
+          />
+        </div>
+      );
+    }
+  }
+```
