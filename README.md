@@ -1,7 +1,6 @@
 # StyledDropzone
 
-A React component built on top of https://react-dropzone.js.org
-Features:
+A React component built on top of https://react-dropzone.js.org with the following features:
 
 - CSS styling already included and easy to customize
 - ready to POST to your API
