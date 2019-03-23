@@ -1,4 +1,6 @@
-# styled-dropzone
+# StyledDropzone
+
+STILL IN DEVELOPMENT, DON'T USE FOR PRODUCTION
 
 A React component built on top of https://react-dropzone.js.org with the following features:
 
