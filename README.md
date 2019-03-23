@@ -1,4 +1,4 @@
-# StyledDropzone
+# styled-dropzone
 
 A React component built on top of https://react-dropzone.js.org with the following features:
 
