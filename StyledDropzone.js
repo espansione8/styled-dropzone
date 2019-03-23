@@ -1,10 +1,6 @@
 import React from 'react';
 import Dropzone from 'react-dropzone';
 
-const postUrl = 'https://httpbin.org/post'; // insert your API location
-const maxSize = 10485760; // 10485760 = 10MB - 5242880 = 5MB
-const minSize = 1; //
-const multerName = 'imgFiles'; // insert multer name used in server
 const imageTypes = [
   'image/bmp',
   'image/gif',
@@ -15,8 +11,6 @@ const imageTypes = [
   'image/tiff',
   'image/webp'
 ]; // list of images MIME types
-
-//imageTypes.includes(file.type)
 
 export default class StyledDropzone extends React.Component {
   state = { previewFiles: [], uploadText: '' };
@@ -48,10 +42,17 @@ export default class StyledDropzone extends React.Component {
   };
 
   handleDrop = async () => {
+    const postUrl = this.props.postUrl || 'https://httpbin.org/post'; // insert your API location
+    const inputName = this.props.inputName || 'file2upload'; // insert multer name used in server
+    const apiKey = this.props.apiKey || false; // insert apiKey if needed
     const formData = new FormData();
-    this.state.previewFiles.forEach(image => {
-      formData.append(multerName, image);
+    this.state.previewFiles.forEach(file => {
+      formData.append(inputName, file);
     });
+    // add Api Key to body
+    if (apiKey) {
+      formData.append('apiKey', apiKey);
+    }
     try {
       const response = await fetch(postUrl, {
         method: 'POST',
@@ -73,6 +74,8 @@ export default class StyledDropzone extends React.Component {
 
   render() {
     const currentArray = this.state.previewFiles;
+    const fileMaxSize = this.props.fileMaxSize || 10485760;
+    const fileMinSize = this.props.fileMinSize || 1;
     const thumbs = currentArray.map((file, index) => (
       <div key={file.name}>
         <div style={thumb}>
@@ -98,9 +101,8 @@ export default class StyledDropzone extends React.Component {
     ));
     return (
       <Dropzone
-        //accept="image/png, image/gif, image/jpeg, image/webp"
-        maxSize={maxSize}
-        minSize={minSize}
+        maxSize={fileMaxSize}
+        minSize={fileMinSize}
         multiple
         onDrop={this.onDrop}
       >
@@ -112,7 +114,7 @@ export default class StyledDropzone extends React.Component {
           rejectedFiles
         }) => {
           const isFileTooLarge =
-            rejectedFiles.length > 0 && rejectedFiles[0].size > maxSize;
+            rejectedFiles.length > 0 && rejectedFiles[0].size > fileMaxSize;
           return (
             <span>
               <div
