@@ -12,8 +12,6 @@ A React component built on top of https://react-dropzone.js.org with the followi
 
 ![](dropzone.gif)
 
-STILL IN DEVELOPMENT!
-don't use it in production using NPM INSTALL
 To make it work get the source from https://github.com/espansione8/styled-dropzone/blob/master/StyledDropzone.js
 and import it as component as shown in the sample code below:
 
