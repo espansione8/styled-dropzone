@@ -157,7 +157,7 @@ export default class DropzoneUpload extends React.Component {
               <div {...getRootProps()} style={!isDragActive ? dropzoneAreaIdle : dropzoneAreaHot}>
                 {isDragActive && !isDragReject && (
                   <span style={dropzoneText}>
-                    <p>Drop it like it's hot!</p>
+                    <p>Drop it here!</p>
                   </span>
                 )}
                 <input {...getInputProps()} />
