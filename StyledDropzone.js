@@ -1,5 +1,18 @@
 import React from 'react';
 import Dropzone from 'react-dropzone';
+// custom imports
+
+// props list
+//    maxSize
+//    minSize
+//    apiKey
+//    apiUrl
+//    customFormData
+//    fileType
+//    inputName
+//    keepFiles
+//    getFormData -> get 'formData'
+//    getResData -> get 'uploadResponse'
 
 const imageTypes = [
   'image/bmp',
@@ -10,13 +23,27 @@ const imageTypes = [
   'image/svg+xml',
   'image/tiff',
   'image/webp'
-]; // list of images MIME types
+]; // list of MIME types https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
 
-export default class StyledDropzone extends React.Component {
-  state = { previewFiles: [], uploadText: '' };
+export default class DropzoneUpload extends React.Component {
+  state = { previewFiles: [], uploadText: '', uploading: false };
+
+  // Make sure to revoke the data uris to avoid memory leaks
+  // clearPreviews = filesArray => {
+  //   const cleanArray = [];
+  //   filesArray.forEach(file => {
+  //     URL.revokeObjectURL(file.preview);
+  //     cleanArray.push(file);
+  //   });
+  //   this.setState({ previewFiles: cleanArray });
+  // };
+
+  onDropLog = acceptedFiles => {
+    console.log(acceptedFiles);
+  };
 
   onDrop = acceptedFiles => {
-    console.log(acceptedFiles);
+    //console.log(acceptedFiles);
     const filesArray = [];
     acceptedFiles.forEach(file => {
       let objPreview;
@@ -42,85 +69,92 @@ export default class StyledDropzone extends React.Component {
   };
 
   handleDrop = async () => {
-    const postUrl = this.props.postUrl || 'https://httpbin.org/post'; // insert your API location
+    this.setState({ uploading: true });
+    const apiUrl = this.props.apiUrl || 'https://httpbin.org/post'; // insert your API location
     const inputName = this.props.inputName || 'file2upload'; // insert multer name used in server
     const apiKey = this.props.apiKey || false; // insert apiKey if needed
+    const customFormData = this.props.customFormData || false; // append formdata 'customFormData' if needed
+    const keepFiles = this.props.keepFiles || false; // clear uplaoded files on success
+    const getFormData = this.props.getFormData || false; // clear uplaoded files on success
+    const getResData = this.props.getResData || false; // clear uplaoded files on success
+
     const formData = new FormData();
-    this.state.previewFiles.forEach(file => {
-      formData.append(inputName, file);
-    });
-    // add Api Key to body
     if (apiKey) {
       formData.append('apiKey', apiKey);
     }
+    if (customFormData) {
+      //console.log('this.props.customFormData', this.props.customFormData);
+      formData.append('customFormData', customFormData);
+    }
+    this.state.previewFiles.forEach(file => {
+      formData.append(inputName, file);
+    });
     try {
-      const response = await fetch(postUrl, {
+      if (getFormData) {
+        this.props.getFormData('formData', formData);
+      }
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData
       });
       const resData = await response.json();
-      console.log(resData);
-      alert(`files posted to: ${resData.url}`);
-      if (resData) {
-        this.setState({ previewFiles: [], uploadText: 'Files Uploaded!' });
+      // console.log('upload response:', response);
+      // console.log('upload resData:', resData);
+      if (response.status === 200) {
+        if (keepFiles) {
+          this.setState({ uploadText: 'Files Uploaded', uploading: false });
+        } else {
+          this.setState({
+            previewFiles: [],
+            uploadText: 'Files Uploaded',
+            uploading: false
+          });
+        }
+        // trigger parent redux action
+        // if (reduxAction) {
+        //   reduxAction(resData);
+        // }
+        if (getResData) {
+          getResData('uploadResponse', resData);
+        }
       } else {
-        this.setState({ uploadText: 'Upload Error' });
+        const errorList = [];
+        resData.forEach(error => errorList.push(error.message));
+        this.setState({ uploadText: errorList, uploading: false });
       }
     } catch (err) {
       // catches errors both in fetch and response.json
       console.error('upload error', err);
+      this.setState({ uploadText: 'Upload Server Error', uploading: false });
     }
   };
 
   render() {
+    //console.log('drop state', this.state);
+    const maxSize = this.props.maxSize || 104857600; // 10485760 = 10MB - 5242880 = 5MB
+    const minSize = this.props.minSize || 1; // 10485760 = 10MB - 5242880 = 5MB
     const currentArray = this.state.previewFiles;
-    const fileMaxSize = this.props.fileMaxSize || 10485760;
-    const fileMinSize = this.props.fileMinSize || 1;
     const thumbs = currentArray.map((file, index) => (
       <div key={file.name}>
         <div style={thumb}>
           <div style={thumbInner}>
-            <img
-              alt="thumb"
-              src={
-                file.preview ||
-                'https://imgplaceholder.com/100x100/cccccc/757575/glyphicon-open-file'
-              }
-              style={img}
-            />
+            <img alt="thumb" src={file.preview || 'static/img/glyphicon-open-file.png'} style={img} />
           </div>
         </div>
         <p style={thumbtext}>{file.name}</p>
-        <a
-          onClick={() => this.removeOneFileFromArray(currentArray, index)}
-          style={{ color: 'red', cursor: 'pointer' }}
-        >
+        <a onClick={() => this.removeOneFileFromArray(currentArray, index)} style={{ color: 'red', cursor: 'pointer' }}>
           remove
         </a>
       </div>
     ));
+
     return (
-      <Dropzone
-        maxSize={fileMaxSize}
-        minSize={fileMinSize}
-        multiple
-        onDrop={this.onDrop}
-      >
-        {({
-          getRootProps,
-          getInputProps,
-          isDragActive,
-          isDragReject,
-          rejectedFiles
-        }) => {
-          const isFileTooLarge =
-            rejectedFiles.length > 0 && rejectedFiles[0].size > fileMaxSize;
+      <Dropzone accept={this.props.fileType || ''} maxSize={maxSize} minSize={minSize} multiple onDrop={this.onDrop}>
+        {({ getRootProps, getInputProps, isDragActive, isDragReject, rejectedFiles }) => {
+          const isFileTooLarge = rejectedFiles.length > 0 && rejectedFiles[0].size > maxSize;
           return (
             <span>
-              <div
-                {...getRootProps()}
-                style={!isDragActive ? dropzoneAreaIdle : dropzoneAreaHot}
-              >
+              <div {...getRootProps()} style={!isDragActive ? dropzoneAreaIdle : dropzoneAreaHot}>
                 {isDragActive && !isDragReject && (
                   <span style={dropzoneText}>
                     <p>Drop it like it's hot!</p>
@@ -137,20 +171,11 @@ export default class StyledDropzone extends React.Component {
                     <p>choose Cancel or Upload</p>
                   </span>
                 )}
-                {isDragReject && (
-                  <h2 style={{ color: 'red' }}>
-                    File type not accepted, sorry!
-                  </h2>
-                )}
-                {isFileTooLarge && (
-                  <h2 style={{ color: 'red' }}>Too large files excluded.</h2>
-                )}
-                {this.state.uploadText !== '' && (
-                  <h2 style={{ color: 'orange' }}>{this.state.uploadText}</h2>
-                )}
+                {isDragReject && <h3 style={{ color: 'red' }}>Wrong file type!</h3>}
+                {isFileTooLarge && <h2 style={{ color: 'red' }}>File is too large.</h2>}
+                {this.state.uploadText !== '' && <h2 style={{ color: 'orange' }}>{this.state.uploadText}</h2>}
               </div>
               <div style={{ textAlign: 'center', paddingTop: 5 }}>
-                <div>
                   <button
                     disabled={currentArray.length <= 0}
                     onClick={this.removeAllFilesFromArray}
@@ -164,7 +189,6 @@ export default class StyledDropzone extends React.Component {
                   >
                     Upload
                   </button>
-                </div>
                 <aside style={thumbsContainer}>{thumbs}</aside>
               </div>
             </span>
