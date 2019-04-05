@@ -12,6 +12,23 @@ A React component built on top of https://react-dropzone.js.org with the followi
 
 ![](dropzone.gif)
 
+TO DOs:
+ - update sample code with new props
+ - update readme for new props:
+ 
+maxSize -> 10485760 = 10MB - 5242880 = 5MB
+minSize -> 10485760 = 10MB - 5242880 = 5MB
+apiKey -> append 'apiKey' to formData
+apiUrl -> api url destination
+customFormData -> custom data to append
+fileType -> accepted file types
+inputName -> name for multer
+keepFiles -> keep previews after upload
+getFormData -> get 'formData'
+getResData -> get 'uploadResponse'
+  
+ 
+
 To make it work get the source from https://github.com/espansione8/styled-dropzone/blob/master/StyledDropzone.js
 and import it as component as shown in the sample code below:
 
